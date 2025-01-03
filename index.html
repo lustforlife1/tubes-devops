@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tubes Devops</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #f4f4f4;
+            margin: 5px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tubes DevOps</h1>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <form id="todo-form" style="display: none;">
+            <input type="text" id="task" placeholder="Add new task">
+            <button type="submit">Add</button>
+        </form>
+        <ul id="todo-list"></ul>
+    </div>
+    <script>
+        loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const response = await fetch("http://127.0.0.1:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("username", username);
+        window.location.href = "home.html";
+    } else {
+        alert(data.message);
+    }
+});
+
+        const loginForm = document.getElementById('login-form');
+        const todoForm = document.getElementById('todo-form');
+        const todoList = document.getElementById('todo-list');
+        let token = '';
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const response = await fetch('http://127.0.0.1:5000/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+                token = data.token;
+                loginForm.style.display = 'none';
+                todoForm.style.display = 'block';
+                fetchTodos();
+            } else {
+                alert(data.message);
+            }
+        });
+
+        todoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const task = document.getElementById('task').value;
+            await fetch('http://127.0.0.1:5000/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ task }),
+            });
+            fetchTodos();
+        });
+
+        async function fetchTodos() {
+            const response = await fetch('http://127.0.0.1:5000/todos', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const todos = await response.json();
+            todoList.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.textContent = todo.task;
+                todoList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
